@@ -27,7 +27,7 @@ final class FavoritesViewModelImpl: FavoritesViewModel {
     
     // MARK: - Private Subjects
     
-    var getStorageServicePublisherSubject = PassthroughSubject<[PhotoElement], Never>()
+    private let storageServiceSubject = PassthroughSubject<[PhotoElement], Never>()
     
     // MARK: - FavoritesViewModelInput
     
@@ -38,7 +38,7 @@ final class FavoritesViewModelImpl: FavoritesViewModel {
     // MARK: - FavoritesViewModelOutput
     
     var updateStorageServicePublisher: AnyPublisher<[PhotoElement], Never> {
-        getStorageServicePublisherSubject.eraseToAnyPublisher()
+        storageServiceSubject.eraseToAnyPublisher()
     }
     
     // MARK: - Initialization
@@ -53,7 +53,7 @@ final class FavoritesViewModelImpl: FavoritesViewModel {
         updateStorageServiceSubject
             .sink { [weak self] _ in
                 let photoElementModels = self?.storageService.photoElements
-                self?.getStorageServicePublisherSubject.send(photoElementModels ?? [])
+                self?.storageServiceSubject.send(photoElementModels ?? [])
             }
             .store(in: &cancellables)
         
@@ -61,7 +61,7 @@ final class FavoritesViewModelImpl: FavoritesViewModel {
             .sink { [weak self] photoElement in
                 self?.storageService.removeItem(photoElement)
                 let photoElementModels = self?.storageService.photoElements
-                self?.getStorageServicePublisherSubject.send(photoElementModels ?? [])
+                self?.storageServiceSubject.send(photoElementModels ?? [])
             }
             .store(in: &cancellables)
         
