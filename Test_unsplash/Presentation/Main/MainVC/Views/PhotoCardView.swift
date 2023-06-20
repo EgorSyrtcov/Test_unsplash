@@ -5,7 +5,7 @@ final class PhotoCardView: UIView {
     private let posterImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(named: "posterDefault")
-        iv.contentMode = .scaleToFill
+        iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = 10
         iv.clipsToBounds = true
         iv.translatesAutoresizingMaskIntoConstraints = false

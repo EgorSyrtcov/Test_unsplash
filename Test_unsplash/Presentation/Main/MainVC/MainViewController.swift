@@ -14,7 +14,7 @@ final class MainViewController: UIViewController {
     lazy private var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 15, left: 20, bottom: 20, right: 20)
-        layout.itemSize = CGSize(width: self.view.frame.width - 80, height: 400)
+        layout.itemSize = CGSize(width: self.view.frame.width - 80, height: 200)
         layout.minimumLineSpacing = 30
         layout.scrollDirection = .vertical
         let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -22,6 +22,7 @@ final class MainViewController: UIViewController {
         collection.showsVerticalScrollIndicator = false
         collection.dataSource = self
         collection.delegate = self
+        collection.prefetchDataSource = self
         collection.alwaysBounceVertical = true
         collection.translatesAutoresizingMaskIntoConstraints = false
         return collection
@@ -130,19 +131,11 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        switch isSearchBarEmpty {
-        case true:
-            let cell = collectionView.dequeueCell(cellType: PhotoViewCell<PhotoCardView>.self, for: indexPath)
-            let model = photoElements[indexPath.item]
-            cell.containerView.update(with: model)
-            return cell
-        case false:
-            let cell = collectionView.dequeueCell(cellType: PhotoViewCell<PhotoCardView>.self, for: indexPath)
-            let model = photoSearchElements[indexPath.item]
-            cell.containerView.update(with: model)
-            return cell
-        }
-        
+        let elements = isSearchBarEmpty ? photoElements : photoSearchElements
+        let cell = collectionView.dequeueCell(cellType: PhotoViewCell<PhotoCardView>.self, for: indexPath)
+        let model = elements[indexPath.item]
+        cell.containerView.update(with: model)
+        return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -151,29 +144,17 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        switch isSearchBarEmpty {
-        case true:
-            let photo = photoElements[indexPath.item]
-            viewModel.detailCellDidTapSubject.send(photo)
-        case false:
-            let photo = photoSearchElements[indexPath.item]
-            viewModel.detailCellDidTapSubject.send(photo)
-        }
+        let photo = isSearchBarEmpty ? photoElements[indexPath.item] : photoSearchElements[indexPath.item]
+        viewModel.detailCellDidTapSubject.send(photo)
     }
 }
 
-extension MainViewController: UIScrollViewDelegate {
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-        guard !searchController.isActive else { return }
+extension MainViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+
         guard !isLoadingMore else { return }
-        
-        let offset = scrollView.contentOffset.y
-        let totalContentHeight = scrollView.contentSize.height
-        let totalScrollViewFixedHeight = scrollView.frame.size.height
-        
-        if offset > (totalContentHeight - totalScrollViewFixedHeight) {
+        let lastIndexPath = IndexPath(row: photoElements.count - 1, section: 0)
+        if indexPaths.contains(lastIndexPath) {
             isLoadingMore = true
             viewModel.scrollLoadingMoreSubject.send()
         }
