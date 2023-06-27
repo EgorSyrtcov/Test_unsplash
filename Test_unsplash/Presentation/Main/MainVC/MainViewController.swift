@@ -6,7 +6,7 @@ final class MainViewController: UIViewController {
     lazy private var activityIndicator: UIActivityIndicatorView = {
         var activityIndicator = UIActivityIndicatorView(style: .large)
         activityIndicator.hidesWhenStopped = true
-        activityIndicator.color = .white
+        activityIndicator.color = .red
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         return activityIndicator
     }()
@@ -14,7 +14,7 @@ final class MainViewController: UIViewController {
     lazy private var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 15, left: 20, bottom: 20, right: 20)
-        layout.itemSize = CGSize(width: self.view.frame.width - 80, height: 200)
+        layout.itemSize = CGSize(width: 150, height: 150)
         layout.minimumLineSpacing = 30
         layout.scrollDirection = .vertical
         let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -81,10 +81,10 @@ final class MainViewController: UIViewController {
                 guard let self = self else { return }
                 let currentCount = self.photoElements.count
                 let newIndexPaths = (currentCount..<currentCount+returnValue.count).map { IndexPath(item: $0, section: 0) }
-                self.photoElements.insert(contentsOf: returnValue, at: currentCount)
                 self.isLoadingMore = false
                 DispatchQueue.main.async {
                     self.collectionView.performBatchUpdates({
+                        self.photoElements.insert(contentsOf: returnValue, at: currentCount)
                         self.collectionView.insertItems(at: newIndexPaths)
                     }, completion: nil)
                 }
@@ -136,10 +136,6 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         let model = elements[indexPath.item]
         cell.containerView.update(with: model)
         return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.size.width, height: 30.0)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
